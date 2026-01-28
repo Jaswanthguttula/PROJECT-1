@@ -45,9 +45,13 @@ class Config:
     CONFLICT_THRESHOLD = float(os.getenv("CONFLICT_THRESHOLD", 0.3))
 
     # Directories
-    UPLOAD_FOLDER = "uploads"
-    REPORTS_FOLDER = "generated_reports"
-    TEMP_FOLDER = "temp_files"
+    # On Vercel, we must use /tmp for any writable operations
+    IS_VERCEL = os.environ.get("VERCEL") == "1"
+    
+    BASE_DIR = "/tmp" if IS_VERCEL else "."
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+    REPORTS_FOLDER = os.path.join(BASE_DIR, "generated_reports")
+    TEMP_FOLDER = os.path.join(BASE_DIR, "temp_files")
 
     # Clause Types (Common contract clause categories)
     CLAUSE_TYPES = [
