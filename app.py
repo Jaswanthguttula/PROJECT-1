@@ -33,7 +33,14 @@ CORS(app)
 Config.init_directories()
 
 # Initialize database
-engine = init_db(Config.DATABASE_URL)
+try:
+    engine = init_db(Config.DATABASE_URL)
+except Exception as e:
+    print(f"Database initialization failed: {e}")
+    # In Vercel, we might not have write access to create a local SQLite file.
+    # We create a dummy engine to allow the app to boot (e.g., for static pages).
+    from sqlalchemy import create_engine
+    engine = create_engine("sqlite:///:memory:")
 
 # Initialize login manager
 login_manager = LoginManager()
@@ -628,70 +635,14 @@ def fix_clause(clause_id):
         session.close()
 
 if __name__ == "__main__":
+    # Internal server loop for local development
     print("Starting Contract Clause Detection System API...")
-    print(f"Database: {Config.DATABASE_URL}")
-    print(f"Upload folder: {Config.UPLOAD_FOLDER}")
-
     host = Config.API_HOST
     port = Config.API_PORT
 
-    # Use a stable server loop. Flask's dev server can auto-exit in some IDE/task contexts.
-    # 1) If waitress is available, prefer it.
-    # 2) Otherwise fall back to Python's built-in wsgiref server.
     try:
-        from waitress import serve  # type: ignore
-
-        print("Serving with waitress (production-style server)...")
+        from waitress import serve
+        print("Serving with waitress...")
         serve(app, host=host, port=port)
-    except ModuleNotFoundError:
-        from wsgiref.simple_server import make_server
-        import time
-        import traceback
-
-        print("Serving with built-in wsgiref server...")
-        # Binding to 0.0.0.0 is fine, but logging localhost is clearer for users.
-        print(f" * UI: http://127.0.0.1:{port}/")
-        print(f" * Binding: host={host!r} port={port}")
-
-        # In some IDE/task environments, long-running foreground processes can be interrupted.
-        # If serve_forever exits unexpectedly, log why and retry a few times.
-        max_restarts = 3
-        restarts = 0
-
-        while True:
-            httpd = None
-            try:
-                httpd = make_server(host, port, app)
-                print("WSGI server created; entering serve_forever()", flush=True)
-                httpd.serve_forever()
-                # If we ever get here, the server stopped without KeyboardInterrupt.
-                print("Warning: serve_forever() returned unexpectedly.", flush=True)
-                restarts += 1
-                if restarts > max_restarts:
-                    print("Server stopped (max restarts exceeded).", flush=True)
-                    break
-                print(
-                    f"Restarting server in 1s... ({restarts}/{max_restarts})",
-                    flush=True,
-                )
-                time.sleep(1.0)
-                continue
-            except KeyboardInterrupt:
-                print("Server stopped (KeyboardInterrupt).", flush=True)
-                break
-            except BaseException as e:
-                print(f"Server crashed ({type(e).__name__}: {e}).", flush=True)
-                traceback.print_exc()
-                restarts += 1
-                if restarts > max_restarts:
-                    print("Server stopped (max restarts exceeded).", flush=True)
-                    break
-                print(f"Retrying in 1s... ({restarts}/{max_restarts})", flush=True)
-                time.sleep(1.0)
-                continue
-            finally:
-                try:
-                    if httpd is not None:
-                        httpd.server_close()
-                except Exception:
-                    pass
+    except ImportError:
+        app.run(host=host, port=port, debug=Config.DEBUG)

@@ -19,7 +19,9 @@ class Config:
     """Base configuration"""
 
     # Database
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./contracts.db")
+    IS_VERCEL = os.environ.get("VERCEL") == "1"
+    DEFAULT_DB = "sqlite:////tmp/contracts.db" if IS_VERCEL else "sqlite:///./contracts.db"
+    DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DB)
 
     # Security
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key-12345")
