@@ -1,4 +1,3 @@
-# Core Dependencies
 flask==3.0.0
 flask-cors==4.0.0
 sqlalchemy==2.0.23
@@ -8,17 +7,8 @@ python-dotenv==1.0.0
 requests==2.31.0
 waitress==3.0.0
 psycopg2-binary==2.9.9
-
-# Document Processing (Vercel-friendly)
 pdfplumber==0.10.3
 python-docx==1.1.0
 openpyxl==3.1.2
-
-# PDF Generation
 reportlab==4.0.7
 jinja2==3.1.2
-
-# NOTE: ML libraries (torch, transformers, spacy, faiss) 
-# are excluded here to stay under Vercel's 250MB limit.
-# The application will automatically run in Lite mode.
-# To use full AI, deploy on Railway/Render using requirements_full.txt.
