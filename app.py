@@ -1,5 +1,5 @@
 """
-Main Flask API Application
+Main Flask API Application - Vercel Optimized
 """
 
 import os
